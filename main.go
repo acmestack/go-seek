@@ -6,6 +6,8 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
 	"regexp"
 	"time"
@@ -20,7 +22,10 @@ var (
 	handle      *pcap.Handle
 )
 
+var dbGlobal *gorm.DB
+
 func main() {
+	initDb()
 	// 打开某一网络设备
 	handle, err = pcap.OpenLive(device, snapshotLen, promiscuous, timeout)
 	if err != nil {
@@ -31,6 +36,7 @@ func main() {
 	for packet := range packetSource.Packets() {
 		printPacketInfo(packet)
 	}
+	defer dbGlobal.Close()
 }
 func printPacketInfo(packet gopacket.Packet) {
 	// Let's see if the packet is an ethernet packet
@@ -44,28 +50,31 @@ func printPacketInfo(packet gopacket.Packet) {
 				dstIP := ip.DstIP.String()
 				tcpLayer := packet.Layer(layers.LayerTypeTCP)
 				if tcpLayer != nil {
-					//tcp, _ := tcpLayer.(*layers.TCP)
+					tcp, _ := tcpLayer.(*layers.TCP)
 					applicationLayer := packet.ApplicationLayer()
 					if applicationLayer != nil {
 						payload := string(applicationLayer.Payload())
-						if "123.57.13.246" == dstIP {
-							//fmt.Println(payload)
+						if "123.57.13.246" == dstIP && "8080(http-alt)" == tcp.DstPort.String() {
+							fmt.Println(payload)
 							method := getMethod(payload)
 							host := getValue(payload, "Host:\\s(.*?)\n")
 							userAgent := getValue(payload, "User-Agent:\\s(.*?)\n")
 							origin := getValue(payload, "Origin:\\s(.*?)\n")
 							referer := getValue(payload, "Referer:\\s(.*?)\n")
 							cookie := getValue(payload, "Cookie:\\s(.*?)\n")
-							httpBaseObj := &HttpBase{
-								Method:    method,
-								Host:      host,
-								UserAgent: userAgent,
-								Origin:    origin,
-								Referer:   referer,
-								Cookie:    cookie,
+							if host != "" {
+								httpBaseObj := &HttpBase{
+									Method:    method,
+									Host:      host,
+									UserAgent: userAgent,
+									Origin:    origin,
+									Referer:   referer,
+									Cookie:    cookie,
+								}
+								dbGlobal.Create(httpBaseObj)
+								marshal, _ := json.Marshal(httpBaseObj)
+								fmt.Println(string(marshal))
 							}
-							marshal, _ := json.Marshal(httpBaseObj)
-							fmt.Println(string(marshal))
 							fmt.Println("----------------------------------------------------------------------------------------------------------")
 						}
 					}
@@ -91,4 +100,14 @@ func getMethod(payload string) string {
 		return host[1]
 	}
 	return ""
+}
+
+func initDb() {
+	db, err := gorm.Open("mysql", "root:root-abcd-1234@tcp(123.57.13.246:3306)/http_info?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic("连接数据库失败")
+	}
+	// 自动迁移模式
+	db.AutoMigrate(&HttpBase{})
+	dbGlobal = db
 }

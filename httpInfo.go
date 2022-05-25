@@ -1,6 +1,9 @@
 package main
 
+import "github.com/jinzhu/gorm"
+
 type HttpBase struct {
+	gorm.Model
 	Method    string
 	Host      string
 	UserAgent string
@@ -9,7 +12,7 @@ type HttpBase struct {
 	Cookie    string
 }
 
-type httpCookie struct {
+type HttpCookie struct {
 	token     string
 	sessionID string
 }
