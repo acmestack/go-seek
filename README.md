@@ -1,2 +1,2 @@
 # go-seek
-this is a seek programe to seek your computer flow
+this is a seek program to seek your computer flow
