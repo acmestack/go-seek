@@ -26,7 +26,7 @@ var (
 var dbGlobal *gorm.DB
 
 func StartSeek() {
-	dbGlobal = database.InitDb()
+	dbGlobal = database.ObtainDb()
 	handle, err = pcap.OpenLive(device, snapshotLen, promiscuous, timeout)
 	if err != nil {
 		log.Fatal(err)
