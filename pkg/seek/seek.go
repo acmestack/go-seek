@@ -1,4 +1,4 @@
-package main
+package seek
 
 import (
 	"encoding/json"
@@ -7,7 +7,8 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"go-seek/pkg/database"
+	"go-seek/pkg/httpinfo"
 	"log"
 	"regexp"
 	"time"
@@ -24,9 +25,8 @@ var (
 
 var dbGlobal *gorm.DB
 
-func main() {
-	initDb()
-	// 打开某一网络设备
+func StartSeek() {
+	dbGlobal = database.InitDb()
 	handle, err = pcap.OpenLive(device, snapshotLen, promiscuous, timeout)
 	if err != nil {
 		log.Fatal(err)
@@ -36,8 +36,8 @@ func main() {
 	for packet := range packetSource.Packets() {
 		printPacketInfo(packet)
 	}
-	defer dbGlobal.Close()
 }
+
 func printPacketInfo(packet gopacket.Packet) {
 	// Let's see if the packet is an ethernet packet
 	ethernetLayer := packet.Layer(layers.LayerTypeEthernet)
@@ -63,7 +63,7 @@ func printPacketInfo(packet gopacket.Packet) {
 							referer := getValue(payload, "Referer:\\s(.*?)\n")
 							cookie := getValue(payload, "Cookie:\\s(.*?)\n")
 							if host != "" {
-								httpBaseObj := &HttpBase{
+								httpBaseObj := &httpinfo.HttpBase{
 									Method:    method,
 									Host:      host,
 									UserAgent: userAgent,
@@ -100,14 +100,4 @@ func getMethod(payload string) string {
 		return host[1]
 	}
 	return ""
-}
-
-func initDb() {
-	db, err := gorm.Open("mysql", "root:root-abcd-1234@tcp(123.57.13.246:3306)/http_info?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic("连接数据库失败")
-	}
-	// 自动迁移模式
-	db.AutoMigrate(&HttpBase{})
-	dbGlobal = db
 }

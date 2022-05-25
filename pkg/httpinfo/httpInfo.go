@@ -1,4 +1,4 @@
-package main
+package httpinfo
 
 import "github.com/jinzhu/gorm"
 
