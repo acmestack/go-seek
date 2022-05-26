@@ -9,7 +9,7 @@ import (
 var dbGlobal *gorm.DB
 
 func InitDb() {
-	db, err := gorm.Open("mysql", "root:root-abcd-1234@tcp(123.57.13.246:3306)/http_info?charset=utf8&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "root:*@tcp(*:3306)/http_info?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic("连接数据库失败")
 	}
