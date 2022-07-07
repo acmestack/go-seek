@@ -1,6 +1,7 @@
 package seek
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -31,17 +32,8 @@ var (
 	userAgentReg        string = "User-Agent:\\s(.*)"
 )
 
-func StartSeek() {
-
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		log.Println("执行错误：", err.Error())
-	}
-	fmt.Println(devices)
-	for _, v := range devices {
-		go openSync(v.Name)
-	}
-
+func StartSeek(name string) {
+	openSync(name)
 }
 
 func openSync(deviceName string) {
@@ -110,8 +102,15 @@ func printPacketInfo(packet gopacket.Packet) {
 								Ext:    ext,
 								Ct:     ct,
 							}
-							fmt.Println(serviceLog)
+							marshal, _ := json.Marshal(serviceLog)
+							fmt.Println(string(marshal))
 							fmt.Println("----------------------------------------------------------------------------------------------------------")
+							//execute := httpclient.Post("http://192.168.3.37:9128/ajax/addServiceLogForJava").Json(serviceLog).Execute()
+							//defaultClient := &http.Client{}
+							//response, _ := defaultClient.Post("http://192.168.3.37:9128/ajax/addServiceLogForJava", "application/json", strings.NewReader(string(marshal)))
+							//log.Println(response.Body)
+							//log.Println(response.Body)
+
 						}
 					}
 				}

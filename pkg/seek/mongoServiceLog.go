@@ -3,29 +3,29 @@ package seek
 import "time"
 
 type MongoServiceLog struct {
-	Oid             string
-	T               int
-	Sid             string
-	Sd              string
-	Sa              string
-	Uid             string
-	Duid            string
-	Mid             string
-	Url             string
-	Reqt            time.Time
-	Reqc            string
-	SrcIp           string
-	DstIp           string
-	SrcSeq          string
-	DstAck          string
-	Rest            string
-	Resc            string
-	Reslen          string
-	Ua              string
-	Ext             string
-	Ct              time.Time
-	Urlmd5          string
-	BehaviorId      string
-	Behavior        string
+	Oid             string    `json:"oid"`
+	T               int       `json:"t"`
+	Sid             string    `json:"sid"`
+	Sd              string    `json:"sd"`
+	Sa              string    `json:"sa"`
+	Uid             string    `json:"uid"`
+	Duid            string    `json:"duid"`
+	Mid             string    `json:"mid"`
+	Url             string    `json:"url"`
+	Reqt            time.Time `json:"reqt"`
+	Reqc            string    `json:"reqc"`
+	SrcIp           string    `json:"src_ip"`
+	DstIp           string    `json:"dst_ip"`
+	SrcSeq          string    `json:"src_seq"`
+	DstAck          string    `json:"dst_ack"`
+	Rest            string    `json:"rest"`
+	Resc            string    `json:"resc"`
+	Reslen          string    `json:"reslen"`
+	Ua              string    `json:"ua"`
+	Ext             string    `json:"ext"`
+	Ct              time.Time `json:"ct"`
+	Urlmd5          string    `json:"urlmd5"`
+	BehaviorId      string    `json:"behavior_id"`
+	Behavior        string    `json:"behavior"`
 	RequestSystemId string
 }

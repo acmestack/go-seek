@@ -2,10 +2,14 @@ package main
 
 import (
 	"go-seek/pkg/seek"
+	"os"
 )
 
 func main() {
-	seek.StartSeek()
+	strings := os.Args
+	args := strings[1]
+	print(args)
+	seek.StartSeek(args)
 	for true {
 
 	}
