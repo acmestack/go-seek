@@ -7,6 +7,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -38,14 +39,12 @@ func StartSeek() {
 	}
 	fmt.Println(devices)
 	for _, v := range devices {
-		if v.Description == device {
-			go startSync(v.Name)
-		}
+		go openSync(v.Name)
 	}
 
 }
 
-func startSync(deviceName string) {
+func openSync(deviceName string) {
 	handle, err = pcap.OpenLive(deviceName, snapshotLen, promiscuous, timeout)
 	if err != nil {
 		log.Fatal(err)
@@ -65,17 +64,53 @@ func printPacketInfo(packet gopacket.Packet) {
 		if ethernetPacket.EthernetType.String() == "IPv4" {
 			ipLayer := packet.Layer(layers.LayerTypeIPv4)
 			if ipLayer != nil {
-				//ip, _ := ipLayer.(*layers.IPv4)
-				//dstIP := ip.DstIP.String()
+				ip, _ := ipLayer.(*layers.IPv4)
+				dstIP := ip.DstIP.String()
+				srcIp := ip.SrcIP.String()
 				tcpLayer := packet.Layer(layers.LayerTypeTCP)
 				if tcpLayer != nil {
-					//tcp, _ := tcpLayer.(*layers.TCP)
+					tcp, _ := tcpLayer.(*layers.TCP)
+					dstPort := tcp.DstPort.String()
 					applicationLayer := packet.ApplicationLayer()
 					if applicationLayer != nil {
 						payload := string(applicationLayer.Payload())
 						if strings.Contains(payload, "http") {
-							//if "192.168.3.33" == dstIP && "8080(http-alt)" == tcp.DstPort.String() {
+							sid := getOneStringByRegex(payload, businessSystemIdReg)
+							uid := getOneStringByRegex(payload, userIdReg)
+							mid := getOneStringByRegex(payload, machineIdReg)
+							ext := getOneStringByRegex(payload, extendedInfoReg)
+							url := ""
+							ua := getOneStringByRegex(payload, userAgentReg)
+							reqc := ""
+							sa := dstIP + ":" + dstPort
+							sd := getOneStringByRegex(payload, hostReg)
+							ct := time.Now()
+							reqt := time.Now()
+							t := 0
+							dstIp := dstIP
+							srcIp := getSrcIp(payload, srcIp)
+							srcSeq := strconv.Itoa(int(tcp.Seq))
 							fmt.Println(payload)
+							fmt.Println("----------------------------------------------------------------------------------------------------------")
+							serviceLog := MongoServiceLog{
+								T:      t,
+								Sid:    sid,
+								Sd:     sd,
+								Sa:     sa,
+								Uid:    uid,
+								Duid:   "",
+								Mid:    mid,
+								Url:    url,
+								Reqt:   reqt,
+								Reqc:   reqc,
+								SrcIp:  srcIp,
+								DstIp:  dstIp,
+								SrcSeq: srcSeq,
+								Ua:     ua,
+								Ext:    ext,
+								Ct:     ct,
+							}
+							fmt.Println(serviceLog)
 							fmt.Println("----------------------------------------------------------------------------------------------------------")
 						}
 					}
@@ -83,6 +118,15 @@ func printPacketInfo(packet gopacket.Packet) {
 			}
 		}
 	}
+}
+
+// todo 配置clientIP 正则
+func getSrcIp(payload string, srcIp string) string {
+	clientIp := getOneStringByRegex(payload, "")
+	if clientIp != "" {
+		return clientIp
+	}
+	return srcIp
 }
 
 func getValue(payload string, reg string) string {
@@ -110,7 +154,7 @@ func getOneStringByRegex(str, rule string) string {
 	}
 	//提取关键信息
 	result := reg.FindStringSubmatch(str)
-	if len(result) < 1 {
+	if len(result) < 2 {
 		return ""
 	}
 	return result[1]

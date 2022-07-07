@@ -1,8 +1,10 @@
-package httpinfo
+package seek
+
+import "time"
 
 type MongoServiceLog struct {
 	Oid             string
-	T               string
+	T               int
 	Sid             string
 	Sd              string
 	Sa              string
@@ -10,7 +12,7 @@ type MongoServiceLog struct {
 	Duid            string
 	Mid             string
 	Url             string
-	Reqt            string
+	Reqt            time.Time
 	Reqc            string
 	SrcIp           string
 	DstIp           string
@@ -21,7 +23,7 @@ type MongoServiceLog struct {
 	Reslen          string
 	Ua              string
 	Ext             string
-	Ct              string
+	Ct              time.Time
 	Urlmd5          string
 	BehaviorId      string
 	Behavior        string
