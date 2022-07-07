@@ -1,9 +1,6 @@
 package httpinfo
 
-import "github.com/jinzhu/gorm"
-
 type HttpBase struct {
-	gorm.Model
 	Method    string
 	Host      string
 	UserAgent string
