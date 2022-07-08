@@ -1,36 +1,54 @@
 package main
 
 import (
-	"go-seek/pkg/seek"
+	"encoding/json"
+	"fmt"
+	"github.com/spf13/viper"
+	"junan-bsds-seek-go/entity"
+	"junan-bsds-seek-go/seek"
 	"log"
-	"os"
 )
 
 func main() {
-	strings := os.Args
-	var deviceName string
-	var dstIp string
-	var remoteUrl string
-	if len(strings) > 2 {
-		deviceName = strings[1]
-		dstIp = strings[2]
-		remoteUrl = strings[3]
-	} else {
-		log.Println(
-			`必须传入网卡名称，监控IP和推送地址:
-                例如： go-seek eth0 192.168.3.31 http://192.168.3.104:6888/bsds/ajax/addServiceLogForJava
-			`)
-		return
-	}
-	log.Println("deviceName:", deviceName)
-	log.Println("dstIp:", dstIp)
-	log.Println("url:", remoteUrl)
+	seekConfig := getSeekConfig()
+	seek.StartSeek(seekConfig)
+}
 
-	//deviceName = "\\Device\\NPF_{D108477B-204F-4BCB-991C-6906DF99FCE4}"
-	//dstIp = "192.168.3.34"
-	//remoteUrl = "http://192.168.3.104:6888/bsds/ajax/addServiceLogForJava"
-	seek.StartSeek(deviceName, dstIp, remoteUrl)
-	for true {
-
+func initConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		if v, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Println(v)
+		} else {
+			panic(fmt.Errorf("read config err=%s", err))
+		}
 	}
+}
+
+func getSeekConfig() entity.SeekConfig {
+	initConfig()
+	var seekConfig entity.SeekConfig
+	remoteHost := viper.GetString("remote-host")
+	sendUri := viper.GetString("send-uri")
+	monitorIp := viper.GetString("monitor-ip")
+	monitorPorts := viper.GetString("monitor-ports")
+	network := viper.GetString("network")
+	ipField := viper.GetString("ip-field")
+	filterFileReg := viper.GetString("filter-file-reg")
+	filterIps := viper.GetString("filter-ips")
+
+	seekConfig.RemoteHost = remoteHost
+	seekConfig.SendUri = sendUri
+	seekConfig.MonitorIp = monitorIp
+	seekConfig.MonitorPorts = monitorPorts
+	seekConfig.Network = network
+	seekConfig.IpField = ipField
+	seekConfig.FilterFileReg = filterFileReg
+	seekConfig.FilterIps = filterIps
+	marshal, _ := json.Marshal(seekConfig)
+	log.Println("读取配置文件结果：\n", string(marshal))
+	return seekConfig
 }
