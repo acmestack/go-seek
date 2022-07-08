@@ -1,0 +1,8 @@
+remote-host: http://192.168.3.104:6888
+send-uri: /bsds/ajax/addServiceLogForJava
+monitor-ip: 192.168.3.37
+monitor-ports: 80,9128
+network: \Device\NPF_{D108477B-204F-4BCB-991C-6906DF99FCE4}
+ip-field: clientip:(.*)
+filter-file-reg: (\S*)\.((css)|(js)|(png)|(gif)|(ico))\b
+filter-ips: 192.168.3.103
