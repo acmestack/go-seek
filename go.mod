@@ -1,4 +1,4 @@
-module junan-bsds-seek-go
+module github.com/acmestack/go-seek
 
 go 1.18
 
